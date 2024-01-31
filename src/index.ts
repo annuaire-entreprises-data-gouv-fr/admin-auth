@@ -101,7 +101,9 @@ const getBrowserSignature = (req: Request) => {
 
 app.get('/admin/auth/api', async (req: Request, res: Response) => {
   const session = await getSession(req, res);
-  console.log(req.headers['x-original-uri'], session.email, session.ip, session.signature)
+  const clientIp = getClientIp(req)
+
+  console.log(`[${(new Date()).toISOString()}] ${req.headers['x-original-uri']} ${session.email} ${clientIp}`)
 
   if (!session.email) {
     res.sendStatus(401)
@@ -109,7 +111,6 @@ app.get('/admin/auth/api', async (req: Request, res: Response) => {
   }
 
   if (VERIFY_IP_ADDRESS) {
-    const clientIp = getClientIp(req)
 
     if (session.ip && session.ip !== clientIp) {
       console.log(`User IP address has changed : email : ${session.email}, old ip : ${session.ip}, new ip : ${clientIp}`)
@@ -199,7 +200,7 @@ app.get('/api/auth/agent-connect/callback', async (req: Request, res: Response) 
 
   await session.save()
 
-  res.status(301)
+  res.status(302)
 
   if (session.pathFrom) {
     res.location(session.pathFrom)

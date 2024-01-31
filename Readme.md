@@ -1,6 +1,72 @@
 # Annuaire des Entreprises
 
-## Configuration
+Projet permettant de limiter les accès à des zones restreintes aux seuls utilisateurs authentifiés via OIDC et dont l'email fait partie d'une liste de mails autorisés.
+
+## Liste des URI
+
+| URI                               | Description                                                                                                   |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| /admin/auth/api                   | Vérifie si l'utilisateur est authentifié et est connecté, redirige vers `/admin/auth/login` si non connecté   |
+| /admin/auth/login                 | Redirige l'utilisateur vers la page d'authorization du serveur OIDC                                           |
+| /api/auth/agent-connect/callback  | URL sur laquelle l'utilisateur est redirigé par le serveur OIDC afin de finaliser la création de la session   |
+| /admin/auth/logout-callback       | Supprime la session                                                                                           |
+
+
+## Usage avec Nginx
+
+Le module NGINX `http auth request` est utilisé pour protéger les accès aux pages restreintes.
+
+
+Exemple de protection de l'ensemble des accès à kibana (hors assets).
+
+```
+  location / {
+    auth_request /admin/auth/api;
+
+    proxy_pass   http://kibana:5601;
+    proxy_set_header Host $host;
+  }
+
+  location ~* ^/(translations|ui)/ {
+    proxy_pass   http://kibana:5601;
+    proxy_set_header Host $host;
+  }
+
+  location ~* \.(js|jpg|png|css|svg|woff2|ico)$ {
+    proxy_pass   http://kibana:5601;
+    proxy_set_header Host $host;
+  }
+
+  # HTTP 401 returned by /admin/auth/api are served as HTTP 302
+  error_page 401 =302 /admin/auth/login;
+
+  # Check if the user is authenticated
+  location = /admin/auth/api {
+    internal;
+    proxy_pass              http://auth:3000;
+    proxy_pass_request_body off;
+    proxy_set_header        Content-Length "";
+    proxy_set_header        X-Original-URI $request_uri;
+  }
+
+  # Login page
+  location = /admin/auth/login {
+    proxy_pass              http://auth:3000;
+    proxy_pass_request_body off;
+    proxy_set_header        Content-Length "";
+    proxy_set_header        X-Original-URI $request_uri;
+  }
+
+  location ~ /admin/auth {
+    proxy_pass              http://auth:3000;
+  }
+
+  location ~ /api/auth/agent-connect {
+    proxy_pass              http://auth:3000;
+  }
+```
+
+## Variables d'environnement
 
 | Variable                          | Default                                   | Description                                                                                   |
 | --------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
@@ -17,3 +83,20 @@
 | AUTH_COOKIE_NAME                  | annuaire-entreprises-admin-auth-session   | Nom du cookie de session                                                                      |
 | AUTH_COOKIE_DOMAIN                | localhost                                 | @see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#domaindomain-value |
 | AUTH_COOKIE_TTL                   | 3600                                      | @see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#max-agenumber      |
+
+## Makefile
+
+| Target                        | Description                                                   |
+| ----------------------------- | ------------------------------------------------------------- |
+| npm_install                   | Installation des dépendances NPM                              |
+| demo_gen_ssl_certificates     | Génération des certificats SSL auto-signés pour la démo       |
+| demo_run                      | Lancement de la stack de démo (nécessite docker compose v2)   |
+
+## Demo
+
+Procédure pour protéger les accès à `www.domaine_a_remplacer.fr`
+
+1. Créer le fichier `.env` à partir de `.env.dist`
+2. Ajouter dans `/etc/hosts` : `127.0.0.1 www.domaine_a_remplacer.fr`
+3. Exécuter `make demo_run`
+4. Accédeder à `https://www.domaine_a_remplacer.fr`
