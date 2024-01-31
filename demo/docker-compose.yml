@@ -1,0 +1,64 @@
+version: '2.4'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: annuaire-entreprises-auth-demo-nginx
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./sites-enabled:/etc/nginx/sites-enabled
+      - ./certificates:/certificates
+
+  auth:
+    container_name: annuaire-entreprises-auth-demo-api
+    image: node:21-alpine
+    command: npm run watch_dev
+    working_dir: /app
+    volumes:
+      - ./../:/app
+
+  kibana:
+    image: kibana:7.17.15
+    container_name: annuaire-entreprises-auth-demo-kibana
+    restart: unless-stopped
+    environment:
+      - SERVER_NAME=kibana
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    expose:
+      - "5601"
+    mem_limit: 2048m
+    cpus: 1.0
+    depends_on:
+      - elasticsearch
+    links:
+      - elasticsearch
+    logging:
+      driver: none
+
+  elasticsearch:
+    image: elasticsearch:7.17.15
+    container_name: annuaire-entreprises-auth-demo-elasticsearch
+    restart: unless-stopped
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - ingest.geoip.downloader.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    expose:
+      - "9200"
+      - "9300"
+    mem_limit: 1024m
+    cpus: 1.0
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+
+volumes:
+  elasticsearch:

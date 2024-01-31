@@ -1,0 +1,38 @@
+{
+  "name": "annuaire-entreprises-auth",
+  "version": "1.0.0",
+  "description": "Authentication API",
+  "main": "index.js",
+  "watch": {
+    "dev": {
+      "patterns": [
+        "src/*.ts",
+        ".env"
+      ],
+      "silent": true,
+      "quiet": true
+    }
+  },
+  "scripts": {
+    "watch_dev": "ts-node-dev --respawn -- src/index.ts",
+    "dev": "npx ts-node src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.12",
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2",
+    "iron-session": "^8.0.1",
+    "npm-watch": "^0.11.0",
+    "openid-client": "^5.6.4",
+    "request-ip": "^3.3.0",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/request-ip": "^0.0.41",
+    "ts-node-dev": "^2.0.0"
+  }
+}
