@@ -16,7 +16,6 @@ Projet permettant de limiter les accès à des zones restreintes aux seuls utili
 
 Le module NGINX `http auth request` est utilisé pour protéger les accès aux pages restreintes.
 
-
 Exemple de protection de l'ensemble des accès à kibana (hors assets).
 
 ```
@@ -64,6 +63,28 @@ Exemple de protection de l'ensemble des accès à kibana (hors assets).
   location ~ /api/auth/agent-connect {
     proxy_pass              http://auth:3000;
   }
+```
+
+Workflow correspondant à la configuration Nginx ci-dessus
+
+```mermaid
+sequenceDiagram
+    Client->>Nginx: GET https://annuaire-entreprises.data.gouv.fr/restricted-area
+    Nginx->>AdminAuth: GET /admin/auth/api
+    AdminAuth->>Nginx: HTTP 401
+    Nginx->>AdminAuth: GET /admin/auth/login
+    AdminAuth->>OIDCServer: GET /api/v2/authorize
+    OIDCServer->>AdminAuth: URL d'authentification OIDC
+    AdminAuth->>Client: HTTP 302 URL d'authentification OIDC
+    Client->>OIDCServer: URL d'authentification OIDC
+    OIDCServer->>Client: HTTP 302 vers /api/auth/agent-connect/callback
+    Client->>AdminAuth: GET /api/auth/agent-connect/callback
+    AdminAuth->>Client: HTTP 302 vers https://annuaire-entreprises.data.gouv.fr/restricted-area
+    Client->>Nginx: GET https://annuaire-entreprises.data.gouv.fr/restricted-area
+    Nginx->>AdminAuth: GET /admin/auth/api
+    AdminAuth->>Nginx: HTTP 200
+    Nginx->>RestrictedArea: GET /restricted-area
+    RestrictedArea->>Client: HTTP 200
 ```
 
 ## Variables d'environnement
