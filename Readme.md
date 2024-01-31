@@ -79,9 +79,15 @@ sequenceDiagram
     Client->>OIDCServer: URL d'authentification OIDC
     OIDCServer->>Client: HTTP 302 vers /api/auth/agent-connect/callback
     Client->>AdminAuth: GET /api/auth/agent-connect/callback
+    AdminAuth->>OIDCServer: Validation du code d'authorisation
+    OIDCServer->>AdminAuth: Génération d'un access token
+    AdminAuth->>OIDCServer: Récupération des infos utilisateurs
+    OIDCServer->>AdminAuth: Envoi de l'email de l'utilisateur
+    AdminAuth->>AdminAuth: Création du cookie de session de l'utilisateur connecté
     AdminAuth->>Client: HTTP 302 vers https://annuaire-entreprises.data.gouv.fr/restricted-area
     Client->>Nginx: GET https://annuaire-entreprises.data.gouv.fr/restricted-area
     Nginx->>AdminAuth: GET /admin/auth/api
+    AdminAuth->>AdminAuth: Validation que l'email de l'utilisateur est autorisé à accéder au service
     AdminAuth->>Nginx: HTTP 200
     Nginx->>RestrictedArea: GET /restricted-area
     RestrictedArea->>Client: HTTP 200
