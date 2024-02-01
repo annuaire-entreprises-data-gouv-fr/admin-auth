@@ -127,3 +127,7 @@ Procédure pour protéger les accès à `www.domaine_a_remplacer.fr`
 2. Ajouter dans `/etc/hosts` : `127.0.0.1 www.domaine_a_remplacer.fr`
 3. Exécuter `make demo_run`
 4. Accédeder à `https://www.domaine_a_remplacer.fr`
+
+## Licence
+
+Le code source de ce dépôt est publié sous [licence MIT](LICENSE) par la Direction interministérielle du numérique.
