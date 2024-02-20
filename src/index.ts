@@ -9,12 +9,13 @@ dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
-const authorizedUsers = (process.env.AUTHORIZED_USER_EMAILS || '').split(',');
+const AUTHORIZED_USER_EMAILS = (process.env.AUTHORIZED_USER_EMAILS || '').split(',');
+const AUTHORIZED_SIRET = process.env.AUTHORIZED_SIRET || '';
 
 // SESSION
-const IRON_SESSION_PWD = (process.env.IRON_SESSION_PWD || '')
-const COOKIE_NAME = (process.env.AUTH_COOKIE_NAME || 'annuaire-entreprises-admin-auth-session')
-const COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN || '127.0.0.1'
+const IRON_SESSION_PWD = process.env.IRON_SESSION_PWD || '';
+const COOKIE_NAME = process.env.AUTH_COOKIE_NAME || 'annuaire-entreprises-admin-auth-session';
+const COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN || '127.0.0.1';
 const SESSION_TTL = Number.parseInt(process.env.AUTH_SESSION_TTL || '3600')
 
 // OIDC
@@ -28,12 +29,13 @@ const POST_LOGOUT_REDIRECT_URI = process.env.OPENID_POST_LOGOUT_REDIRECT_URI || 
 const VERIFY_BROWSER_SIGNATURE = process.env.VERIFY_BROWSER_SIGNATURE == '1'
 const VERIFY_IP_ADDRESS = process.env.VERIFY_IP_ADDRESS == '1'
 
-const SCOPES = 'openid email';
+const SCOPES = 'openid email siret';
 
 let openidClient = undefined as BaseClient | undefined;
 
 type Session = {
   email?: string;
+  siret?: string;
 
   ip?: string | null;
   signature?: string;
@@ -99,11 +101,16 @@ const getBrowserSignature = (req: Request) => {
   return signature
 }
 
+const logMessage = (message: string) => {
+  const currentDate = (new Date()).toISOString()
+  console.log(`[${currentDate}] ${message}`)
+}
+
 app.get('/admin/auth/api', async (req: Request, res: Response) => {
   const session = await getSession(req, res);
   const clientIp = getClientIp(req)
 
-  console.log(`[${(new Date()).toISOString()}] ${req.headers['x-original-uri']} ${session.email} ${clientIp}`)
+  logMessage(`${req.headers['x-original-uri']} ${session.email} ${clientIp}`)
 
   if (!session.email) {
     res.sendStatus(401)
@@ -111,9 +118,8 @@ app.get('/admin/auth/api', async (req: Request, res: Response) => {
   }
 
   if (VERIFY_IP_ADDRESS) {
-
     if (session.ip && session.ip !== clientIp) {
-      console.log(`User IP address has changed : email : ${session.email}, old ip : ${session.ip}, new ip : ${clientIp}`)
+      logMessage(`User IP address has changed : email : ${session.email}, old ip : ${session.ip}, new ip : ${clientIp}`)
       await session.destroy()
       res.sendStatus(401)
       return
@@ -124,19 +130,26 @@ app.get('/admin/auth/api', async (req: Request, res: Response) => {
     const signature = getBrowserSignature(req)
 
     if (session.signature !== signature) {
-      console.log(`Browser signature has changed : email : ${session.email}, old signature : ${session.signature}, new signature : ${signature}`)
+      logMessage(`Browser signature has changed : email : ${session.email}, old signature : ${session.signature}, new signature : ${signature}`)
       await session.destroy()
       res.sendStatus(401)
       return
     }
   }
 
-  if (authorizedUsers.indexOf(session.email) !== -1) {
-    res.sendStatus(200)
-  } else {
-    console.log(`User is unauthorized : email : ${session.email}`)
+  if (AUTHORIZED_SIRET.length > 0 && AUTHORIZED_SIRET !== session.siret) {
+    logMessage(`User is unauthorized : email : ${session.email} - siret : ${session.siret}`)
     res.sendStatus(403)
+    return
   }
+
+  if (AUTHORIZED_USER_EMAILS.indexOf(session.email) === -1) {
+    logMessage(`User is unauthorized : email : ${session.email} - siret : ${session.siret}`)
+    res.sendStatus(403)
+    return
+  }
+
+  res.sendStatus(200)
 })
 
 app.get('/admin/auth/login', async (req: Request, res: Response) => {
