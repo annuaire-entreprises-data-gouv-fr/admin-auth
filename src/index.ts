@@ -101,25 +101,27 @@ const getBrowserSignature = (req: Request) => {
   return signature
 }
 
-const logMessage = (message: string) => {
+const logMessage = (req: Request, message: string) => {
   const currentDate = (new Date()).toISOString()
-  console.log(`[${currentDate}] ${message}`)
+  console.log(`[${currentDate}] ${req.route.path} - ${message}`)
 }
 
 app.get('/admin/auth/api', async (req: Request, res: Response) => {
   const session = await getSession(req, res);
   const clientIp = getClientIp(req)
 
-  logMessage(`${req.headers['x-original-uri']} ${session.email} ${clientIp}`)
-
   if (!session.email) {
+    logMessage(req, `${req.headers['x-original-uri']} ${clientIp}`)
+
     res.sendStatus(401)
     return
   }
 
+  logMessage(req, `${req.headers['x-original-uri']} ${session.email} ${clientIp}`)
+
   if (VERIFY_IP_ADDRESS) {
     if (session.ip && session.ip !== clientIp) {
-      logMessage(`User IP address has changed : email : ${session.email}, old ip : ${session.ip}, new ip : ${clientIp}`)
+      logMessage(req, `User IP address has changed : email : ${session.email}, old ip : ${session.ip}, new ip : ${clientIp}`)
       await session.destroy()
       res.sendStatus(401)
       return
@@ -130,7 +132,7 @@ app.get('/admin/auth/api', async (req: Request, res: Response) => {
     const signature = getBrowserSignature(req)
 
     if (session.signature !== signature) {
-      logMessage(`Browser signature has changed : email : ${session.email}, old signature : ${session.signature}, new signature : ${signature}`)
+      logMessage(req, `Browser signature has changed : email : ${session.email}, old signature : ${session.signature}, new signature : ${signature}`)
       await session.destroy()
       res.sendStatus(401)
       return
@@ -138,13 +140,13 @@ app.get('/admin/auth/api', async (req: Request, res: Response) => {
   }
 
   if (AUTHORIZED_SIRET.length > 0 && AUTHORIZED_SIRET !== session.siret) {
-    logMessage(`User is unauthorized : email : ${session.email} - siret : ${session.siret}`)
+    logMessage(req, `User is unauthorized : email : ${session.email} - siret : ${session.siret}`)
     res.sendStatus(403)
     return
   }
 
   if (AUTHORIZED_USER_EMAILS.indexOf(session.email) === -1) {
-    logMessage(`User is unauthorized : email : ${session.email} - siret : ${session.siret}`)
+    logMessage(req, `User is unauthorized : email : ${session.email} - siret : ${session.siret}`)
     res.sendStatus(403)
     return
   }
@@ -202,7 +204,7 @@ app.get('/api/auth/agent-connect/callback', async (req: Request, res: Response) 
 
   const userInfo = (await client.userinfo(tokenSet)) as OpenConnectUserInfo;
 
-  console.log(`Authenticated : {userInfo.email}`)
+  logMessage(req, `Authenticated : ${userInfo.email}`)
 
   const session = await getSession(req, res);
 
@@ -213,14 +215,12 @@ app.get('/api/auth/agent-connect/callback', async (req: Request, res: Response) 
 
   await session.save()
 
+  const redirectUri = session.pathFrom || '/'
+
+  logMessage(req, `Redirecting ${userInfo.email} to ${redirectUri}`)
+
   res.status(302)
-
-  if (session.pathFrom) {
-    res.location(session.pathFrom)
-  } else {
-    res.location('/')
-  }
-
+  res.location(redirectUri)
   res.send()
 })
 
