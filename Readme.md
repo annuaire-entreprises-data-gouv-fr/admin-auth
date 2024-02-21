@@ -99,6 +99,7 @@ sequenceDiagram
 | --------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
 | PORT                              | 3000                                      | Port d'écoute                                                                                 |
 | AUTHORIZED_USER_EMAILS CSV        |                                           | Liste des emails ayant accès à la zone protégée (sensible à la casse)                         |
+ AUTHORIZED_SIRET                   |                                           | Lorsque défini : restreint les accès aux seuls utilisateurs dont le SIRET de correspond       |
 | IRON_SESSION_PWD                  |                                           | Mot de passe de protection du cookie de session (au moins 32 caractères)                      |
 | OPENID_CLIENT_ID                  |                                           |                                                                                               |
 | OPENID_CLIENT_SECRET              |                                           |                                                                                               |
