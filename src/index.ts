@@ -52,6 +52,7 @@ type Session = {
 type OpenConnectUserInfo = {
   email: string;
   email_verified: boolean;
+  siret: string;
 };
 
 const getSession = async (req: Request, res: Response) => {
@@ -210,6 +211,7 @@ app.get('/api/auth/agent-connect/callback', async (req: Request, res: Response) 
 
   session.idToken = tokenSet.id_token;
   session.email = userInfo.email;
+  session.siret = userInfo.siret;
   session.ip = getClientIp(req);
   session.signature = getBrowserSignature(req);
 
