@@ -1,6 +1,14 @@
-# Annuaire des Entreprises
+<h1 align="center">
+  <img src="https://github.com/etalab/annuaire-entreprises-site/blob/main/public/images/annnuaire-entreprises.svg" width="400px" />
+</h1>
 
-Projet permettant de limiter les accès à des zones restreintes aux seuls utilisateurs authentifiés via OIDC et dont l'email fait partie d'une liste de mails autorisés.
+<a href="https://github.com/etalab/annuaire-entreprises-admin-auth/blob/main/LICENSE"><img src="https://img.shields.io/github/license/etalab/annuaire-entreprises-admin-auth.svg?color=green" alt="License Badge"></a>
+
+Bienvenue sur le dépôt permettant de limiter les accès à des zones restreintes aux seuls utilisateurs authentifiés via OIDC et dont l'email fait partie d'une liste de mails autorisés, pour le projet [Annuaire des Entreprises](https://annuaire-entreprises.data.gouv.fr).
+
+## Dépôts liés 🏗
+
+Ce dépôt fait partie [d'un ensemble de services qui constituent l'Annuaire des Entreprises](https://github.com/etalab/annuaire-entreprises-site?tab=readme-ov-file#dépôts-liés-).
 
 ## Liste des URI
 
