@@ -16,7 +16,7 @@ Ce dépôt fait partie [d'un ensemble de services qui constituent l'Annuaire des
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | /admin/auth/api                   | Vérifie si l'utilisateur est authentifié et est connecté, redirige vers `/admin/auth/login` si non connecté   |
 | /admin/auth/login                 | Redirige l'utilisateur vers la page d'authorization du serveur OIDC                                           |
-| /api/auth/agent-connect/callback  | URL sur laquelle l'utilisateur est redirigé par le serveur OIDC afin de finaliser la création de la session   |
+| /admin/auth/callback              | URL sur laquelle l'utilisateur est redirigé par le serveur OIDC afin de finaliser la création de la session   |
 | /admin/auth/logout-callback       | Supprime la session                                                                                           |
 
 
@@ -67,10 +67,6 @@ Exemple de protection de l'ensemble des accès à kibana (hors assets).
   location ~ /admin/auth {
     proxy_pass              http://auth:3000;
   }
-
-  location ~ /api/auth/agent-connect {
-    proxy_pass              http://auth:3000;
-  }
 ```
 
 Workflow correspondant à la configuration Nginx ci-dessus
@@ -85,8 +81,8 @@ sequenceDiagram
     OIDCServer->>AdminAuth: URL d'authentification OIDC
     AdminAuth->>Client: HTTP 302 URL d'authentification OIDC
     Client->>OIDCServer: URL d'authentification OIDC
-    OIDCServer->>Client: HTTP 302 vers /api/auth/agent-connect/callback
-    Client->>AdminAuth: GET /api/auth/agent-connect/callback
+    OIDCServer->>Client: HTTP 302 vers /admin/auth/callback
+    Client->>AdminAuth: GET /admin/auth/callback
     AdminAuth->>OIDCServer: Validation du code d'authorisation
     OIDCServer->>AdminAuth: Génération d'un access token
     AdminAuth->>OIDCServer: Récupération des infos utilisateurs
