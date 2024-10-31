@@ -184,7 +184,7 @@ app.get('/admin/auth/login', async (req: Request, res: Response) => {
   res.redirect(authUrl)
 })
 
-app.get('/api/auth/agent-connect/callback', async (req: Request, res: Response) => {
+app.get('/admin/auth/callback', async (req: Request, res: Response) => {
   const client = await getOpenIDClient();
 
   const params = client.callbackParams(req);
